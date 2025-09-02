@@ -1,27 +1,36 @@
 {
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
-    "express": "^4.21.1",
-    "mongoose": "^8.18.0",
-    "multer": "^2.0.2",
-    "nodemon": "^3.1.10",
-    "path": "^0.12.7",
-    "xlsx": "^0.18.5"
-  },
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Student Grades Management Backend",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "dev": "nodemon index.js",
     "build": "npm install --prefix frontend && npm run build --prefix frontend",
     "start": "node index.js"
-  }, "engines": {
-    "node": "20.x"
   },
-  "keywords": [],
+  "engines": {
+    "node": "20.x",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.0.3",
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "resolutions": {
+    "path-to-regexp": "^6.2.1"
+  },
+  "overrides": {
+    "path-to-regexp": "^6.2.1"
+  },
+  "keywords": ["express", "mongodb", "student-management", "file-upload"],
   "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+  "license": "ISC"
 }
