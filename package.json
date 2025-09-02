@@ -2,10 +2,11 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
-    "express": "^5.1.0",
+    "express": "^4.21.2",
     "mongoose": "^8.18.0",
     "multer": "^2.0.2",
     "nodemon": "^3.1.10",
+    "path": "^0.12.7",
     "xlsx": "^0.18.5"
   },
   "name": "backend",
@@ -13,9 +14,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev":"nodemon server.js",
-    "build":"npm install && npm install --prefix frontend && npm run build --prefix frontend",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "build": "npm install --prefix frontend && npm run build --prefix frontend",
     "start": "node server.js"
   },
   "keywords": [],

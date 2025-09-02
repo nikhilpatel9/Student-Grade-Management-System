@@ -32,6 +32,9 @@ const studentSchema = new mongoose.Schema({
 
 const Student = mongoose.model('Student', studentSchema);
 
+
+// Serve static React build
+
 // Upload History Schema
 const uploadHistorySchema = new mongoose.Schema({
   filename: { type: String, required: true },
@@ -204,7 +207,15 @@ app.get('/api/upload-history', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running' });
 });
+// app.get("/", (req, res) => {
+//   res.send("✅ Student Grades API is running. Try /api/health");
+// });
+app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
 
+// React Router fallback (for SPA)
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
+});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
