@@ -51,7 +51,7 @@ const uploadHistorySchema = new mongoose.Schema({
 
 const UploadHistory = mongoose.model('UploadHistory', uploadHistorySchema);
 
-// Configure multer for file uploads with memory storage (better for cloud deployment)
+// Configure multer for file uploads with memory storage
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
@@ -68,7 +68,7 @@ const upload = multer({
   }
 });
 
-// Routes
+// API Routes ONLY - NO CATCH-ALL ROUTES
 
 // Root route
 app.get('/', (req, res) => {
@@ -81,7 +81,8 @@ app.get('/', (req, res) => {
       upload: '/api/upload',
       uploadHistory: '/api/upload-history',
       updateStudent: '/api/students/update',
-      deleteStudent: '/api/students/delete'
+      deleteStudent: '/api/students/delete',
+      stats: '/api/stats'
     }
   });
 });
@@ -203,7 +204,7 @@ app.get('/api/students', async (req, res) => {
   }
 });
 
-// Update student (using POST to avoid parameter route issues)
+// Update student
 app.post('/api/students/update', async (req, res) => {
   try {
     const { id, student_name, total_marks, marks_obtained } = req.body;
@@ -247,7 +248,7 @@ app.post('/api/students/update', async (req, res) => {
   }
 });
 
-// Delete student (using POST to avoid parameter route issues)
+// Delete student
 app.post('/api/students/delete', async (req, res) => {
   try {
     const { id } = req.body;
@@ -317,14 +318,35 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-// Serve static files if frontend exists
+// REMOVED ALL CATCH-ALL AND WILDCARD ROUTES
+// Only serve specific routes to avoid path-to-regexp issues
+
+// Serve specific frontend routes manually if needed
 const frontendPath = path.join(__dirname, 'frontend', 'dist');
 if (fs.existsSync(frontendPath)) {
   console.log('Frontend found, serving static files');
   app.use(express.static(frontendPath));
   
-  // Handle React Router (catch-all route)
-  app.get('*', (req, res) => {
+  // Serve index.html for specific frontend routes only
+  app.get('/dashboard', (req, res) => {
+    const indexPath = path.join(frontendPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({ error: 'Frontend index.html not found' });
+    }
+  });
+  
+  app.get('/upload', (req, res) => {
+    const indexPath = path.join(frontendPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({ error: 'Frontend index.html not found' });
+    }
+  });
+  
+  app.get('/students', (req, res) => {
     const indexPath = path.join(frontendPath, 'index.html');
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
@@ -350,8 +372,8 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Handle 404 for API routes
-app.use('/api/*', (req, res) => {
+// Handle 404 for API routes only
+app.use('/api', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
@@ -373,6 +395,7 @@ app.listen(PORT, () => {
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
   console.log(`📊 Available endpoints:`);
+  console.log(`   GET  / - API info`);
   console.log(`   GET  /api/health - Health check`);
   console.log(`   GET  /api/students - Get all students`);
   console.log(`   POST /api/upload - Upload Excel/CSV file`);
