@@ -1,6 +1,10 @@
+import { useEffect, useState } from 'react'
 import { FaHistory, FaFileExcel, FaCalendarAlt } from 'react-icons/fa'
 
-const UploadHistory = ({ history }) => {
+const UploadHistory = () => {
+  const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(true)
+
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', {
@@ -10,6 +14,36 @@ const UploadHistory = ({ history }) => {
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch('/api/upload-history')
+        if (!res.ok) throw new Error('Failed to fetch history')
+        const data = await res.json()
+        if (Array.isArray(data)) {
+          setHistory(data)
+        } else {
+          setHistory([])
+        }
+      } catch (err) {
+        console.error('Error fetching upload history:', err)
+        setHistory([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchHistory()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-8 text-center">
+        <p className="text-gray-500">Loading upload history...</p>
+      </div>
+    )
   }
 
   if (history.length === 0) {
