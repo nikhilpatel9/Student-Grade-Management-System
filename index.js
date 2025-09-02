@@ -213,7 +213,7 @@ app.get('/api/health', (req, res) => {
 app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
 
 // React Router fallback (for SPA)
-app.get('/:path(*)', (req, res) => {
+app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
 app.listen(PORT, () => {
