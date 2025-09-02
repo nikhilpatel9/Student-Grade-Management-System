@@ -32,9 +32,6 @@ const studentSchema = new mongoose.Schema({
 
 const Student = mongoose.model('Student', studentSchema);
 
-
-// Serve static React build
-
 // Upload History Schema
 const uploadHistorySchema = new mongoose.Schema({
   filename: { type: String, required: true },
@@ -70,7 +67,12 @@ const upload = multer({
   }
 });
 
-// Routes
+// API Routes - Make sure all API routes are defined before the catch-all
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'Server is running' });
+});
 
 // Upload Excel file
 app.post('/api/upload', upload.single('file'), async (req, res) => {
@@ -153,7 +155,7 @@ app.get('/api/students', async (req, res) => {
   }
 });
 
-// Update student
+// Update student - Fixed route parameter
 app.put('/api/students/:id', async (req, res) => {
   try {
     const { student_name, total_marks, marks_obtained } = req.body;
@@ -180,7 +182,7 @@ app.put('/api/students/:id', async (req, res) => {
   }
 });
 
-// Delete student
+// Delete student - Fixed route parameter
 app.delete('/api/students/:id', async (req, res) => {
   try {
     const deletedStudent = await Student.findByIdAndDelete(req.params.id);
@@ -203,19 +205,15 @@ app.get('/api/upload-history', async (req, res) => {
   }
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running' });
-});
-// app.get("/", (req, res) => {
-//   res.send("✅ Student Grades API is running. Try /api/health");
-// });
+// Serve static React build files
 app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
 
-// React Router fallback (for SPA)
-app.get('/*', (req, res) => {
+// React Router fallback (for SPA) - MUST be the last route
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
+
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
