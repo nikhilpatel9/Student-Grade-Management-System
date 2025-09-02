@@ -192,16 +192,7 @@ app.delete('/api/students/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete student' });
   }
 });
-fetch("/api/upload-history")
-  .then(res => res.json())
-  .then(data => {
-    if (Array.isArray(data)) {
-      setHistory(data);
-    } else {
-      console.error("Upload history error:", data.error);
-      setHistory([]); // fallback
-    }
-  });
+
 // Get upload history
 app.get('/api/upload-history', async (req, res) => {
   try {
