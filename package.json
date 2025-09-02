@@ -17,6 +17,8 @@
     "dev": "nodemon index.js",
     "build": "npm install --prefix frontend && npm run build --prefix frontend",
     "start": "node index.js"
+  }, "engines": {
+    "node": "18.x"
   },
   "keywords": [],
   "author": "",
