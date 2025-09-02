@@ -24,12 +24,7 @@
   "devDependencies": {
     "nodemon": "^3.0.2"
   },
-  "resolutions": {
-    "path-to-regexp": "^6.2.1"
-  },
-  "overrides": {
-    "path-to-regexp": "^6.2.1"
-  },
+ 
   "keywords": ["express", "mongodb", "student-management", "file-upload"],
   "author": "",
   "license": "ISC"
