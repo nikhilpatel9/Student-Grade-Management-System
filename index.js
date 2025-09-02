@@ -15,10 +15,20 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI 
+const MONGODB_URI = process.env.MONGODB_URI;
+console.log('MongoDB URI:', MONGODB_URI ? 'Set' : 'Not set');
+
+if (!MONGODB_URI) {
+  console.error('MONGODB_URI environment variable is not set');
+  process.exit(1);
+}
+
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // Student Schema
 const studentSchema = new mongoose.Schema({
@@ -31,9 +41,6 @@ const studentSchema = new mongoose.Schema({
 });
 
 const Student = mongoose.model('Student', studentSchema);
-
-
-// Serve static React build
 
 // Upload History Schema
 const uploadHistorySchema = new mongoose.Schema({
@@ -49,7 +56,7 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = 'uploads/';
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir);
   },
@@ -72,9 +79,16 @@ const upload = multer({
 
 // Routes
 
+// Health check - should be first
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'Server is running', timestamp: new Date().toISOString() });
+});
+
 // Upload Excel file
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   try {
+    console.log('Upload attempt started');
+    
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
@@ -130,7 +144,9 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     await uploadRecord.save();
 
     // Clean up uploaded file
-    fs.unlinkSync(filePath);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
 
     res.json({ 
       message: 'File uploaded and processed successfully',
@@ -139,6 +155,12 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
   } catch (error) {
     console.error('Upload error:', error);
+    
+    // Clean up file if it exists
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    
     res.status(500).json({ error: 'Failed to process file: ' + error.message });
   }
 });
@@ -149,6 +171,7 @@ app.get('/api/students', async (req, res) => {
     const students = await Student.find().sort({ created_at: -1 });
     res.json(students);
   } catch (error) {
+    console.error('Get students error:', error);
     res.status(500).json({ error: 'Failed to fetch students' });
   }
 });
@@ -176,6 +199,7 @@ app.put('/api/students/:id', async (req, res) => {
 
     res.json(updatedStudent);
   } catch (error) {
+    console.error('Update student error:', error);
     res.status(500).json({ error: 'Failed to update student' });
   }
 });
@@ -189,6 +213,7 @@ app.delete('/api/students/:id', async (req, res) => {
     }
     res.json({ message: 'Student deleted successfully' });
   } catch (error) {
+    console.error('Delete student error:', error);
     res.status(500).json({ error: 'Failed to delete student' });
   }
 });
@@ -199,23 +224,47 @@ app.get('/api/upload-history', async (req, res) => {
     const history = await UploadHistory.find().sort({ uploaded_at: -1 }).limit(10);
     res.json(history);
   } catch (error) {
+    console.error('Get upload history error:', error);
     res.status(500).json({ error: 'Failed to fetch upload history' });
   }
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running' });
-});
-// app.get("/", (req, res) => {
-//   res.send("✅ Student Grades API is running. Try /api/health");
-// });
-app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
+// Serve static React build (only if frontend exists)
+const frontendPath = path.join(__dirname, 'frontend', 'dist');
+if (fs.existsSync(frontendPath)) {
+  app.use(express.static(frontendPath));
+  
+  // React Router fallback (for SPA) - FIXED ROUTE
+  app.get('*', (req, res) => {
+    const indexPath = path.join(frontendPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({ error: 'Frontend not found' });
+    }
+  });
+} else {
+  // If no frontend, just serve API info
+  app.get('/', (req, res) => {
+    res.json({ 
+      message: 'Student Grades API is running',
+      endpoints: {
+        health: '/api/health',
+        students: '/api/students',
+        upload: '/api/upload',
+        uploadHistory: '/api/upload-history'
+      }
+    });
+  });
+}
 
-// React Router fallback (for SPA)
-app.get('/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
+// Error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  res.status(500).json({ error: 'Internal server error' });
 });
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
